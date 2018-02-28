@@ -1,0 +1,159 @@
+﻿
+1、目标对象
+boss直聘官方网站，武汉地区数据挖掘岗位的招聘情况，网址如下：
+https://www.zhipin.com/c101200100-p100104/?ka=cpc_side_100104
+
+
+2、抓取内容
+岗位名称——Job 
+薪资——Salary  
+公司——Company 
+经验——Experience  
+学历——Education  
+所属行业——Industry  
+融资情况——Financing
+公司规模——CompanySize   
+关键字——KeyWord 
+联系人——ContactPerson 
+职务——Duties 
+图片——Img
+发布时间——PubTime
+城市——City
+
+
+3、各属性的xpath
+Job:
+.//div[@class="info-primary"]/h3/a/text()
+
+Salary:
+.//div[@class="info-primary"]/h3/a/span/text()
+
+Company:
+.//div[@class="company-text"]/h3/a/text()
+
+City:
+.//div[@class="info-primary"]/p/text()[1]
+
+Experience:
+.//div[@class="info-primary"]/p/text()[2]
+
+Education:
+.//div[@class="info-primary"]/p/text()[3]
+
+CompanySize:
+.//div[@class="company-text"]/p/text()[3]
+
+Financing:
+.//div[@class="company-text"]/p/text()[2]
+
+Industry:
+.//div[@class="company-text"]/p/text()[1]
+
+PubTime:
+.//div[@class="job-time"]/span/text()   
+
+KeyWord: 
+.//div[@class="job-tags"]/span/text()  
+
+ContactPerson:
+.//div[@class="job-author"]/p/text()[1]
+
+Duties:
+.//div[@class="job-author"]/p/text()[2]
+
+Img:
+.//div[@class="job-author"]/p/img/@src
+ 
+
+ 
+4、创建数据库表
+
+表一：
+CREATE TABLE bosszhipin_post_info (
+  id int(10) unsigned NOT NULL AUTO_INCREMENT,
+  md5 char(32) NOT NULL COMMENT '几个判断特征生成的唯一值', 
+  
+  post_name varchar(32) NOT NULL COMMENT '岗位名称',
+  salary varchar(32) NOT NULL COMMENT '薪资',
+  company varchar(32) NOT NULL COMMENT '公司',
+  city varchar(32) NOT NULL COMMENT '所在城市',
+  industry varchar(32) NOT NULL COMMENT '所属行业',
+  financing varchar(32) NOT NULL COMMENT '融资情况',
+  company_size varchar(32) NOT NULL COMMENT '公司规模',
+  key_word varchar(32) NOT NULL COMMENT '关键字',
+  experience varchar(32) NOT NULL COMMENT '经验',
+  education varchar(32) NOT NULL COMMENT '学历',
+  contact_name varchar(32) NOT NULL COMMENT '联系人名字',
+  contact_duties varchar(32) NOT NULL COMMENT '联系人职务',
+  contact_photo varchar(256) NOT NULL COMMENT '联系人头像',
+  publish_time varchar(32) NOT NULL COMMENT '发布时间',
+  
+  city_id int(10) unsigned NOT NULL COMMENT '关联城市表',
+  industry_id int(10) unsigned NOT NULL COMMENT '关联行业表',
+  
+  first_seen timestamp NOT NULL COMMENT '首次发现时间',
+  last_seen timestamp NOT NULL COMMENT '最近一次发现时间',
+  created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  PRIMARY KEY (id)
+)
+
+
+
+表二：行业信息表
+CREATE TABLE bosszhipin_industry_info (
+  id int(10) unsigned NOT NULL AUTO_INCREMENT,
+  name varchar(32) NOT NULL COMMENT '行业名称',
+  url varchar(64) NOT NULL COMMENT '行业对应url',
+  use_times int(10) unsigned NOT NULL COMMENT '调用次数',
+  created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  PRIMARY KEY (id)
+)
+
+
+
+表三：城市信息表
+CREATE TABLE bosszhipin_city_info (
+  id int(10) unsigned NOT NULL AUTO_INCREMENT,
+  name varchar(32) NOT NULL COMMENT '行业名称',
+  url varchar(64) NOT NULL COMMENT '行业对应url',
+  use_times int(10) unsigned NOT NULL COMMENT '调用次数',
+  created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  PRIMARY KEY (id)
+)
+
+创建好表之后，命令行输入：
+python -m pwiz -e mysql -H localhost -p3306 -uroot -P Lxm941202mysql -t bosszhipin_post_info bosszhipin -o
+就可以直接得到peewee里的内容
+
+需要注意的是ID在爬取内容里是没有的，文档中应该去掉
+
+
+——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+
+异常处理：
+
+1.存在某些招聘信息的融资情况（Financing）缺失，而CompanySize Financing Industry这三个元素的信息在一个标签里，故导致爬取信息出现紊乱
+解决办法：将Financing Industry这两个单独考虑，采用if判断
+
+2.在分页的时候由于第二页中个别招聘信息的PubTime标签丢失，移植到其他标签里，导致程序终止，无法爬去所有的
+解决办法：利用python的异常处理机制将PubTime异常的设置为其他可标识的东西，之后统一处理数据
+
+3.KeyWord包含0到3个信息不等，要将这几个用一个数组表示，如果空的话就输出None
+解决办法：当KeyWord为空时，对应span里保存的是PubTime；当KeyWord不为空时，对应span里保存的是KeyWord值，此时PubTime保存在.//div[@class="job-time"]/span/text()，顺带解决了第二个问题
+
+4.在用第三个方法处理KeyWord使，关键字缺失的情况没法按预期显示“关键字未知”，原因是if语句没有进入，“发布”是字符型，后面的文本信息是列表型，不能直接用in
+解决办法：将列表型转化为字符型 ','.join(list)
+
+5.对于PubTime这一栏，有的是“发布于某月某日”，有的是“发布于今天”，有的是“发布于昨天”，为了统一，利用时间日期函数将形式变为“2017-9-12”这种固定的格式，加入年份是考虑到跨年爬取带来的误区
+
+6.使用全国网页也能抓取，但是最多只能抓30页
+
+
+
