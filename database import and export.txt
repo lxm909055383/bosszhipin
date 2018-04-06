@@ -24,5 +24,32 @@ use mydatabase;
 load data local infile 'C:\\Users\\user\\Desktop\\data.csv' into table bosszhipin_bak;
 说明：
 此处的表需要在数据库中提前建好
+CREATE TABLE `bosszhipin_bak` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `md5` varchar(32) COLLATE utf8_bin NOT NULL,
+  `post_name` varchar(32) COLLATE utf8_bin NOT NULL,
+  `salary` varchar(32) COLLATE utf8_bin NOT NULL,
+  `company` varchar(32) COLLATE utf8_bin NOT NULL,
+  `city` varchar(32) COLLATE utf8_bin NOT NULL,
+  `industry` varchar(32) COLLATE utf8_bin NOT NULL,
+  `financing` varchar(32) COLLATE utf8_bin NOT NULL,
+  `company_size` varchar(32) COLLATE utf8_bin NOT NULL,
+  `key_word` varchar(32) COLLATE utf8_bin NOT NULL,
+  `experience` varchar(32) COLLATE utf8_bin NOT NULL,
+  `education` varchar(32) COLLATE utf8_bin NOT NULL,
+  `contact_name` varchar(32) COLLATE utf8_bin NOT NULL,
+  `contact_duties` varchar(32) COLLATE utf8_bin NOT NULL,
+  `contact_photo` varchar(256) COLLATE utf8_bin NOT NULL,
+  `publish_time` varchar(32) COLLATE utf8_bin NOT NULL,
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `bosszhipin_post_info_md5` (`md5`),
+  KEY `bosszhipin_post_info_post_name` (`post_name`),
+  KEY `bosszhipin_post_info_company` (`company`),
+  KEY `bosszhipin_post_info_city` (`city`),
+  KEY `bosszhipin_post_info_industry` (`industry`)
+) ENGINE=InnoDB AUTO_INCREMENT=251561 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
 
 
