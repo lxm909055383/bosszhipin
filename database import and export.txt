@@ -1,0 +1,28 @@
+
+一、mysql数据导出到本地文件
+基本格式为：
+mysql -u 用户名 -p -e "SELECT * from 表名" 数据库名 > 存放文件的位置
+
+示例：
+mysql -u root -p -e "SELECT * from bosszhipin_post_info order by rand() limit 10000" bosszhipin > C:\Users\user\Desktop\data.csv
+当在命令行输入上述语句后会提示密码，输入数据库的密码即可
+说明：
+1.如果mysql没有加入到环境变量中，需要进入到mysql安装所在目录才能运行上述命令，否则会提示'mysql' 不是内部或外部命令，也不是可运行的程序
+或批处理文件；若果已经添加，则可以直接运行。
+2.select语句里的内容可以根据自己需要来填写，详细可参考sql语言的查询操作，本示例中就是随机选择表中的10000条数据进行导出。
+3.导出文件的后缀可以有多种选择，如.txt、.csv、.xlsx等，后缀不重要，导出之后也可以根据格式需要重命名进行修改。
+
+
+二、本地文件导入到mysql数据库中
+第一步：mysql -u root -p 之后按提示输入密码
+第二步：use 数据库名
+第三步：load data local infile 存放文件的位置 into table 表名
+
+示例：
+mysql -u root -p
+use mydatabase;
+load data local infile 'C:\\Users\\user\\Desktop\\data.csv' into table bosszhipin_bak;
+说明：
+此处的表需要在数据库中提前建好
+
+
