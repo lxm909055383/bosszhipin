@@ -2,6 +2,7 @@ from bosszhipin.model.mysql_db import *
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 #各城市对职位的需求量（包括总的职位数与公司数）
 Post = bosszhipin_post_info
 mydata_2 = Post.select(Post.city, fn.COUNT(fn.Distinct(Post.company)).alias('company_num'), fn.COUNT(Post.id).alias('position_num')).group_by(Post.city)
